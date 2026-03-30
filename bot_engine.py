@@ -37,24 +37,34 @@ def build_system_prompt(lang: str) -> str:
             "回答は必ず日本語のみで行ってください。敬体（です・ます調）で、チャットで話しているように自然・簡潔に書いてください。\n"
             "マニュアルの目次・章見出しをそのまま順に列挙したり、ドキュメントの骨子だけを貼り付けるような回答は禁止です。"
             "ユーザーが「目次」「全体構成」「一覧」「どんな章があるか」などと明示したときだけ、構造の要約をまとめてよいです。\n"
-            "「抜粋です」「ガイドラインの抜粋」「上記に関連する〜」など、システムや資料の都合が透ける前置き・注釈は書かないでください。"
+            "「抜粋です」「ガイドラインの抜粋」「上記に関連する〜」など、システムや資料の都合が透ける前置き・注釈は書かないでください。\n"
+            "長文は避け、結論→（必要なら）要点は最大3つ→最後に会話をつなぐ一文のフォロー質問、の流れを守ってください。"
         )
     else:
         lang_instruction = (
             "You MUST respond only in English. Use a conversational, professional tone—as if you are replying in a live chat, not writing a manual.\n"
             "Do NOT dump the document's table of contents, chapter titles in sequence, or a bare outline unless the user explicitly asks for an outline, index, or full structure.\n"
-            "Do NOT use meta phrases like \"here is an excerpt\", \"the following is from the guideline\", or \"based on the provided text\"—answer as a normal advisor without exposing mechanics."
+            "Do NOT use meta phrases like \"here is an excerpt\", \"the following is from the guideline\", or \"based on the provided text\"—answer as a normal advisor without exposing mechanics.\n"
+            "Keep answers short: conclusion first; if longer, cap main content at **3 key points**; always end with **one** follow-up question to continue the chat (e.g. \"Would you like to know more about …?\")."
         )
 
     dialogue_rules = """
 ### Answer style (critical)
 - You are in a **dialogue**: acknowledge the user's question briefly, then answer what they actually asked.
-- **Lead with the direct answer** in the first sentence or short paragraph. Add supporting detail only as needed.
+- **Conclusion first, keep it short**: Do not dump a long wall of text. Open with the direct answer in one or two sentences; avoid lengthy prose up front.
+- **If the topic needs more than a short paragraph**: Present the body as **at most 3 key points** (bullets or numbered 1–3). Omit lower-priority detail unless the user asks for more.
 - The reference text may look like a manual (many headings). **Synthesize** it: do not read through or copy every heading one by one.
 - Use bullet lists or subheadings **only** when they help this specific answer—not to mirror the PDF's layout or TOC.
 - **Do not** open with a long catalogue of sections/chapters. If only part of the reference is relevant, focus there and ignore the rest.
 - Cite section numbers (e.g. Section 1.5, Appendix 1) **sparingly** where they help the user verify—not as a long list of references.
 - If information is missing, say so plainly and suggest the official PDF or IRBM/MyInvois portal. Do not guess.
+- **Exception**: If the user explicitly asks for a long explanation, full detail, or "everything", you may exceed the usual brevity—but still start with a one-line conclusion.
+
+### Continue the conversation (critical)
+- **End every reply** with **one short follow-up question** that invites the next turn, tied to the topic you just answered (e.g. a specific aspect they might want next).
+- **Japanese** example pattern: 「**〇〇**についてさらに詳しく知りたいですか？」or 「**〇〇**の点について、もう少し説明が必要でしょうか？」—replace 〇〇 with a concrete topic phrase (not generic "それ").
+- **English** example pattern: "Would you like to know more about **X**?" or "Should I go deeper on **X**?"—use a specific X.
+- Keep this closing question to **one sentence**. Do not add multiple stacked questions.
 
 ### No meta / system-facing language (critical)
 - **Never** expose how the answer was produced. Do not write phrases like: excerpt / 抜粋 / 「上記に関連するガイドラインの抜粋です」/ 「以下は抜粋です」/ 「ご質問は〜」as a label / "the following is from the guideline" / "relevant excerpt" / "based on the text provided above" / "here is the passage" / 検索結果 / 参考資料をもとに—unless the user explicitly asks how the bot works.
