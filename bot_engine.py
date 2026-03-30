@@ -34,16 +34,43 @@ def build_system_prompt(lang: str) -> str:
     """Build system prompt that instructs the model to use the guideline and respond in the correct language."""
     if lang == "ja":
         lang_instruction = (
-            "回答は必ず日本語のみで行ってください。敬体（です・ます調）で、分かりやすく簡潔に書いてください。"
+            "回答は必ず日本語のみで行ってください。敬体（です・ます調）で、チャットで話しているように自然・簡潔に書いてください。\n"
+            "マニュアルの目次・章見出しをそのまま順に列挙したり、ドキュメントの骨子だけを貼り付けるような回答は禁止です。"
+            "ユーザーが「目次」「全体構成」「一覧」「どんな章があるか」などと明示したときだけ、構造の要約をまとめてよいです。\n"
+            "「抜粋です」「ガイドラインの抜粋」「上記に関連する〜」など、システムや資料の都合が透ける前置き・注釈は書かないでください。"
         )
     else:
-        lang_instruction = "You MUST respond only in English. Use clear, professional English."
-    return f"""You are an expert assistant for the Malaysian e-Invoice system (IRBM MyInvois). 
-Your answers must be based ONLY on the official e-Invoice Guideline (Version 4.6) content provided below.
+        lang_instruction = (
+            "You MUST respond only in English. Use a conversational, professional tone—as if you are replying in a live chat, not writing a manual.\n"
+            "Do NOT dump the document's table of contents, chapter titles in sequence, or a bare outline unless the user explicitly asks for an outline, index, or full structure.\n"
+            "Do NOT use meta phrases like \"here is an excerpt\", \"the following is from the guideline\", or \"based on the provided text\"—answer as a normal advisor without exposing mechanics."
+        )
+
+    dialogue_rules = """
+### Answer style (critical)
+- You are in a **dialogue**: acknowledge the user's question briefly, then answer what they actually asked.
+- **Lead with the direct answer** in the first sentence or short paragraph. Add supporting detail only as needed.
+- The reference text may look like a manual (many headings). **Synthesize** it: do not read through or copy every heading one by one.
+- Use bullet lists or subheadings **only** when they help this specific answer—not to mirror the PDF's layout or TOC.
+- **Do not** open with a long catalogue of sections/chapters. If only part of the reference is relevant, focus there and ignore the rest.
+- Cite section numbers (e.g. Section 1.5, Appendix 1) **sparingly** where they help the user verify—not as a long list of references.
+- If information is missing, say so plainly and suggest the official PDF or IRBM/MyInvois portal. Do not guess.
+
+### No meta / system-facing language (critical)
+- **Never** expose how the answer was produced. Do not write phrases like: excerpt / 抜粋 / 「上記に関連するガイドラインの抜粋です」/ 「以下は抜粋です」/ 「ご質問は〜」as a label / "the following is from the guideline" / "relevant excerpt" / "based on the text provided above" / "here is the passage" / 検索結果 / 参考資料をもとに—unless the user explicitly asks how the bot works.
+- Do not repeat or echo internal labels (e.g. "User question", "excerpt") from the prompt. Speak only as a helpful e-Invoice advisor in plain language.
+"""
+
+    return f"""You are an expert assistant for the Malaysian e-Invoice system (IRBM MyInvois).
+
+Your answers must be based ONLY on the official e-Invoice Guideline (Version 4.6) content supplied alongside the user's question in the same user message.
 If the guideline does not contain enough information to answer, say so and suggest checking the full PDF or IRBM/MyInvois portal.
+Do not invent details not present in the guideline.
+
+{dialogue_rules}
+
 {lang_instruction}
-Keep answers accurate, concise, and cite section numbers (e.g. Section 1.5, Appendix 1) when relevant.
-Do not invent details not present in the guideline."""
+"""
 
 
 # Stopwords so we score on meaningful query terms only
@@ -196,8 +223,12 @@ def build_messages(user_query: str, kb_content: str, lang: Optional[str] = None)
         lang = detect_language(user_query)
     system = build_system_prompt(lang)
     context = get_context_for_query(user_query, kb_content, lang=lang)
-    label = "ユーザーの質問" if lang == "ja" else "User question"
-    user_message = f"""## e-Invoice Guideline (excerpt)\n\n{context}\n\n---\n\n## {label}\n{user_query}"""
+    # Neutral delimiters only—no "excerpt" / 抜粋 wording the model might parrot.
+    user_message = f"""{context}
+
+---
+
+{user_query}"""
     return [
         {"role": "system", "content": system},
         {"role": "user", "content": user_message},
@@ -205,17 +236,13 @@ def build_messages(user_query: str, kb_content: str, lang: Optional[str] = None)
 
 
 def answer_fallback(user_query: str) -> str:
-    """Return relevant guideline excerpts when no LLM is available. In user's language."""
+    """Return relevant guideline text when no LLM is available (no meta wrapper)."""
     lang = detect_language(user_query)
     kb = load_knowledge_base(lang=lang)
     if not kb:
         return "Knowledge base not found." if lang != "ja" else "ナレッジベースが見つかりません。"
     context = get_context_for_query(user_query, kb, max_chars=6000, lang=lang)
-    if lang == "ja":
-        intro = f"**ご質問:** {user_query}\n\n上記に関連するガイドラインの抜粋です。詳細は公式PDFをご確認ください。\n\n---\n\n"
-    else:
-        intro = f"**Your question:** {user_query}\n\nRelevant excerpt from the guideline for your question above. Please refer to the official PDF for full details.\n\n---\n\n"
-    return intro + context
+    return context
 
 
 def answer_with_openai(user_query: str, api_key: Optional[str] = None) -> str:
@@ -240,7 +267,7 @@ def answer_with_openai(user_query: str, api_key: Optional[str] = None) -> str:
         resp = client.chat.completions.create(
             model=os.environ.get("EINVOICE_BOT_MODEL", "gpt-4o-mini"),
             messages=messages,
-            temperature=0.2,
+            temperature=float(os.environ.get("EINVOICE_BOT_TEMPERATURE", "0.35")),
             max_tokens=1500,
         )
         return (resp.choices[0].message.content or "").strip()

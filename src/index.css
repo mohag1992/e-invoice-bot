@@ -1,5 +1,6 @@
 :root {
   --bg-app: #f3f4f6;
+  --site-header-h: calc(4.5rem + env(safe-area-inset-top, 0px));
   --bg-header: rgba(255, 255, 255, 0.9);
   --bg-composer: #ffffff;
   --bg-user: #e8f4fc;
@@ -51,63 +52,61 @@ body {
   flex-direction: column;
   height: 100%;
   min-height: 100dvh;
+  padding-top: var(--site-header-h);
 }
 
-/* —— Header —— */
-.chat-header {
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-header);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 10;
+/* —— Fixed site header (ELAST PARTNERS) —— */
+.site-header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  height: var(--site-header-h);
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: 1.15rem;
+  padding-right: 1.15rem;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #0f172a 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.15);
 }
 
-.chat-header-inner {
+.site-header-inner {
+  width: 100%;
   max-width: var(--max-chat);
   margin: 0 auto;
-  padding: 0.65rem 1.25rem;
 }
 
-.chat-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.chat-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.chat-logo-mark {
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.chat-brand-text {
+.site-header-brand {
   min-width: 0;
 }
 
-.chat-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--text);
+.site-header-org {
+  margin: 0 0 0.15rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
 }
 
-.chat-tagline {
-  margin: 0.1rem 0 0;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+.site-header-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1.25;
+}
+
+.site-header-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.6875rem;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
 }
 
 /* —— Scroll area —— */
@@ -536,31 +535,46 @@ body {
 
 .composer-send {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
-  border-radius: 12px;
-  background: var(--accent-send);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #3b82f6 0%, #2563eb 45%, #1d4ed8 100%);
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.12s ease;
+}
+
+.composer-send-icon {
+  margin-left: 2px;
+  margin-bottom: 1px;
 }
 
 .composer-send:hover:not(:disabled) {
-  background: #27272a;
+  background: linear-gradient(145deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
 }
 
 .composer-send:active:not(:disabled) {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
 .composer-send:disabled {
-  background: var(--accent-send-disabled);
-  color: #f4f4f5;
+  background: #e5e7eb;
+  color: #d1d5db;
+  box-shadow: none;
   cursor: not-allowed;
+}
+
+.composer-send:disabled .composer-send-icon {
+  color: #9ca3af;
 }
 
 .chat-footer {
@@ -586,6 +600,20 @@ body {
 }
 
 @media (max-width: 640px) {
+  .site-header-fixed {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .site-header-org {
+    letter-spacing: 0.16em;
+    font-size: 0.6rem;
+  }
+
+  .site-header-title {
+    font-size: 0.98rem;
+  }
+
   .chat-scroll {
     padding-left: 0.65rem;
     padding-right: 0.65rem;

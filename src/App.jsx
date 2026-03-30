@@ -14,10 +14,24 @@ function chatApiUrl() {
   return `${window.location.origin}/api/chat`;
 }
 
-function SendIcon() {
+function PaperPlaneIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+    <svg
+      className="composer-send-icon"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -106,18 +120,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="chat-header">
-        <div className="chat-header-inner">
-          <div className="chat-brand">
-            <div className="chat-logo" aria-hidden="true">
-              <span className="chat-logo-mark">📄</span>
-            </div>
-            <div className="chat-brand-text">
-              <h1 className="chat-title">e-Invoice Guideline Bot</h1>
-              <p className="chat-tagline">
-                IRBM Guideline v4.6 · 英語 / 日本語
-              </p>
-            </div>
+      <header className="site-header-fixed">
+        <div className="site-header-inner">
+          <div className="site-header-brand">
+            <p className="site-header-org">ELAST PARTNERS</p>
+            <h1 className="site-header-title">e-Invoice サポート</h1>
+            <p className="site-header-meta">
+              IRBM Guideline v4.6 · 英語 / 日本語
+            </p>
           </div>
         </div>
       </header>
@@ -219,7 +229,7 @@ export default function App() {
                 disabled={loading || !input.trim()}
                 aria-label="送信"
               >
-                <SendIcon />
+                <PaperPlaneIcon />
               </button>
             </div>
           </form>
