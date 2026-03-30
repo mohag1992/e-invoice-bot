@@ -38,7 +38,8 @@ def build_system_prompt(lang: str) -> str:
             "マニュアルの目次・章見出しをそのまま順に列挙したり、ドキュメントの骨子だけを貼り付けるような回答は禁止です。"
             "ユーザーが「目次」「全体構成」「一覧」「どんな章があるか」などと明示したときだけ、構造の要約をまとめてよいです。\n"
             "「抜粋です」「ガイドラインの抜粋」「上記に関連する〜」など、システムや資料の都合が透ける前置き・注釈は書かないでください。\n"
-            "長文は避け、結論→（必要なら）要点は最大3つ→最後に会話をつなぐ一文のフォロー質問、の流れを守ってください。"
+            "長文は避け、結論→（必要なら）要点は最大3つ→最後に会話をつなぐ一文、の流れを守ってください。\n"
+            "返信の最後の一文は、原則として「**（ここに今回の話題を具体的に）**についてさらに詳しく知りたいですか？」という形にしてください。〇〇は抽象的な「それ」ではなく、実際の論点（例：免除対象の判定、提出期限）を入れてください。"
         )
     else:
         lang_instruction = (
@@ -61,10 +62,12 @@ def build_system_prompt(lang: str) -> str:
 - **Exception**: If the user explicitly asks for a long explanation, full detail, or "everything", you may exceed the usual brevity—but still start with a one-line conclusion.
 
 ### Continue the conversation (critical)
-- **End every reply** with **one short follow-up question** that invites the next turn, tied to the topic you just answered (e.g. a specific aspect they might want next).
-- **Japanese** example pattern: 「**〇〇**についてさらに詳しく知りたいですか？」or 「**〇〇**の点について、もう少し説明が必要でしょうか？」—replace 〇〇 with a concrete topic phrase (not generic "それ").
-- **English** example pattern: "Would you like to know more about **X**?" or "Should I go deeper on **X**?"—use a specific X.
-- Keep this closing question to **one sentence**. Do not add multiple stacked questions.
+- **End every reply** with **exactly one** follow-up question as the **final sentence**, on its own.
+- **Japanese (required when responding in Japanese)**: Use this fixed pattern—only replace the topic phrase with something **concrete** from your answer (never vague 「それ」):
+  「**{topic}**についてさらに詳しく知りたいですか？」
+  Example: 「**実施スケジュールの段階別の対象者**についてさらに詳しく知りたいですか？」
+- **English**: Use the parallel pattern: "Would you like to know more about **X**?" with a specific X.
+- Do not add a second question or extra sentences after this closing line.
 
 ### No meta / system-facing language (critical)
 - **Never** expose how the answer was produced. Do not write phrases like: excerpt / 抜粋 / 「上記に関連するガイドラインの抜粋です」/ 「以下は抜粋です」/ 「ご質問は〜」as a label / "the following is from the guideline" / "relevant excerpt" / "based on the text provided above" / "here is the passage" / 検索結果 / 参考資料をもとに—unless the user explicitly asks how the bot works.
